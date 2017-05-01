@@ -2,7 +2,9 @@
 title: "Homework 1 - R Markdown"
 author: "Maegan Blansett"
 date: "April 30, 2017"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -54,7 +56,7 @@ colnames(tmax) <- c("Month", "Year", "TMax")
 # rename columns
 
 tmin <- aggregate(x = ClimateData$tmin, by = list(ClimateData$month, ClimateData$year), FUN = mean)  
-# aggregate mean minimum monthly temperatures
+# aggregate mean monthly minimum temperatures
 
 colnames(tmin) <- c("Month", "Year", "TMin") 
 # rename columns
