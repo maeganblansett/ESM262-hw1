@@ -239,3 +239,5 @@ lines(x = summer_temp$Year, y = summer_temp$Temp, col = "purple")
 </div>
 
 As this graph illustrates, both **winter precipitation** (shown here in blue) and **summer temperatures** (shown here in purple) can vary greatly over the years. However, it appears that drier winters are often associated with hotter summers, creating a double-whammy for sensitive vegetation. Keeping track of these trends can help us to remain aware of when ecosystems are particularly vulnerable due to climatic variations. 
+
+P.S. Here is a change to be committed. 
