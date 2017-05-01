@@ -1,0 +1,241 @@
+---
+title: "Homework 1 - R Markdown"
+author: "Maegan Blansett"
+date: "April 30, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading the data 
+
+Before we can analyze anything, we must load our data. Since we do not have a CSV, we can use the *read.table()* function to ensure accurate importing. 
+
+```
+ClimateData <- read.table("clim.txt", header = T)
+# load climate dataset with a header
+```
+
+Once our data is loaded, we see that this dataset gives us: 
+
+* Minimum temperatures; 
+
+* Maximum temperatures; and
+
+* Precipitation 
+
+for every day of the year since 1942. 
+
+
+## Annual Trends
+
+Next, we want to explore the general trend in precipitation and temperature throughout the year. We can do this by aggregating those variables by month and year with the *aggregate()* function. 
+
+The following code will take our daily data and find the average monthly precipitation for each year: 
+
+```
+precip <- aggregate(x = ClimateData$rain, by = list(ClimateData$month, ClimateData$year), FUN = mean)  
+# aggregate mean monthly precipitation
+
+colnames(precip) <- c("Month", "Year", "Precip")  
+# rename columns
+```
+
+
+We can use a similar process to get average monthly temperatures. However, since we are given minimum and maximum temperatures, we must take their mean to get the average. 
+
+```
+tmax <- aggregate(x = ClimateData$tmax, by = list(ClimateData$month, ClimateData$year), FUN = mean)  
+# aggregate mean monthly maximum temperatures
+
+colnames(tmax) <- c("Month", "Year", "TMax")  
+# rename columns
+
+tmin <- aggregate(x = ClimateData$tmin, by = list(ClimateData$month, ClimateData$year), FUN = mean)  
+# aggregate mean minimum monthly temperatures
+
+colnames(tmin) <- c("Month", "Year", "TMin") 
+# rename columns
+
+tavg <- (tmax$TMax + tmin$TMin)/2  
+# calculate overall mean monthly temperatures by averaging monthly maximum and minimum temperatures
+
+dates <- tmax[,-3]  
+# borrow the month and year values from our maximum temperatures' data frame since they aren't copied automatically 
+
+tavg <- cbind(dates, tavg)  
+# bind the dates to our average temperature values 
+```
+
+
+After aggregating the data to get monthly precipitation and average temperatures, we can use this code to generate the following graphs: 
+
+```
+boxplot(precip$Precip ~ precip$Month, xlab = "Month", ylab = "Rainfall (inches)", main = "Average Monthly Precipitation, 1942-2016")
+```
+
+<div align="center">
+<img src="precip_plot.png" height=400>
+</div>
+
+
+```
+boxplot(tavg$tavg ~ tavg$Month, xlab = "Month", ylab = "Temperature (degrees)", main = "Average Monthly Temperature, 1942-2016")
+```
+
+<div align="center">
+<img src="temp_plot.png" height=400>
+</div>
+
+
+To find the wettest and driest years overall, we can again aggregate our data, this time only by year. Then, we can use the *which.max()* and *which.min()* functions to pick out the years with the highest and lowest average annual precipitation. 
+
+```
+yearly_precip <- aggregate(x = precip$Precip, by = list(precip$Year), FUN = mean) 
+# aggregate mean yearly precipitation 
+
+colnames(yearly_precip) = c("Year", "Precip")  
+# rename columns
+
+wet_year <- which.max(yearly_precip$Precip)  
+# pick out highest value
+
+wet_year  
+# display highest value
+
+dry_year <- which.min(yearly_precip$Precip)  
+# pick out lowest value 
+
+dry_year  
+# display lowest value 
+```
+
+
+When we go to the rows output by those functions, we see that our wettest year was **1982** with an annual average of **5.85 inches**, and our driest year was **2013** with an annual average of **0.72 inches**. 
+
+Such drastic variations in rainfall can have severe consequences on ecosystems. Many species of native vegetation such as the coast live oak (*Quercus agrifolia*) can be damaged by drought and take years to recover.
+
+The following images illustrate the dramatic difference between a wet and dry year in the California oak woodlands. 
+
+
+<div align="center">
+<img src="healthy_oak.jpg" height=400>
+</div>
+
+
+<div align="center">
+<img src="unhealthy_oak.jpg" height=400>
+</div>
+
+
+## Seasonal Trends 
+
+We can also explore trends in precipitation and average temperature by **season**. Although our dataset did not come with a column identifying seasons, we can easily create one with the following code. 
+
+```
+precip$Season <- ""  
+# create a new column in our precipitation data frame
+
+precip[precip$Month %in% c(4:6),"Season"] <- 1  
+# assign 1 for months 4-6 (spring)
+
+precip[precip$Month %in% c(7:9),"Season"] <- 2  
+# assign 2 for months 7-9 (summer)
+
+precip[precip$Month %in% c(10:12),"Season"] <- 3  
+# assign 3 for months 10-12 (fall)
+
+precip[precip$Month %in% c(1:3),"Season"] <- 4  
+# assign 4 for months 1-3 (winter) 
+```
+
+
+We want to repeat the same process for average temperatures. However, there is another option for doing so that requires even less code, using the *ifelse()* function. 
+
+```
+tavg$Season <- ""  
+# create a new column in our average temperature data frame
+
+tavg$Season <- ifelse(tavg$Month %in% c(1,2,3), "4", ifelse(tavg$Month %in% c(4,5,6), "1", ifelse(tavg$Month %in% c(7,8,9), "2", "3")))  
+# assign 4 for months 1-3 (winter), 1 for months 4-6 (spring), 2 for months 7-9 (summer), and 3 for everything else, i.e. months 10-12 (fall)
+```
+
+
+Once our data has all been given a new value for "Season", we can use it to find the wettest and driest seasons. Once again, we will use the *aggregate()* function. First, we can find the seasonal averages for each year. Then, we can repeat the process to find the overall seasonal averages for all years. 
+
+```
+seasonal_precip <- aggregate(x = precip$Precip, by = list(precip$Season, precip$Year), FUN = mean)  
+# aggregate average seasonal precipitation for each year
+
+colnames(seasonal_precip) = c("Season", "Year", "Precip")  
+# rename columns
+
+seasonal_temp <- aggregate(x = tavg$tavg, by = list(tavg$Season, tavg$Year), FUN = mean)  
+# aggregate average seasonal temperatures for each year
+
+colnames(seasonal_temp) = c("Season", "Year", "Temp")  
+# rename columns 
+
+avg_seasonal_precip <- aggregate(seasonal_precip$Precip, by = list(seasonal_precip$Season), FUN = mean)  
+# aggregate average seasonal temperatures over all years 
+
+colnames(avg_seasonal_precip) = c("Season", "Precip")  
+# rename columns
+```
+
+
+Now, we can use *which.max()* and *which.min()* again to identify the seasons with the highest and lowest precipitation. (Or, since there are only four values, we could just look at them and see for ourselves.) 
+
+```
+wet_season <- which.max(avg_seasonal_precip$Precip)
+# pick out highest value 
+
+wet_season
+# display highest value
+
+dry_season <- which.min(avg_seasonal_precip$Precip)
+# pick out lowest value 
+
+dry_season
+# display lowest value 
+```
+
+
+Either way, we can see that the wettest season is **winter** with an average precipitation of **5.85 inches** over all years, and the driest season is **summer** with an average precipitation of **0.29 inches** over all years. 
+
+
+## Winter Precipitation and Summer Temperatures 
+
+Now that we have datasets containing average seasonal precipitation and temperatures, we can use them to explore additional seasonal trends. Two seasonal variables of particular interest are winter precipitation and summer temperatures. These variables in particular are the limiting factors for many varieties of plant species. 
+
+To pick out only the winter precipitation and summer temperature data from our full datasets, we can use the *subset()* function. 
+
+```
+winter_precip <- subset(seasonal_precip, Season == 4)  
+# create a new dataset with only winter precipitation data for each year
+
+winter_precip <- winter_precip[,-1]  
+# remove the "season" column since we no longer need it 
+
+summer_temp <- subset(seasonal_temp, Season == 2)  
+# create a new dataset with only summer temperature data for each year 
+
+summer_temp <- summer_temp[,-1]  
+# remove the "season" column since we no longer need it 
+```
+
+
+Once we have subsetted our data so that only our variables of interest remain, we can plot them on the same graph to compare trends. 
+
+```
+plot(x = winter_precip$Year, y = winter_precip$Precip, type = "l", col = "cyan", xlab = "Year", ylab = "Value", main = "Winter Precipitation and Summer Temperature")
+lines(x = summer_temp$Year, y = summer_temp$Temp, col = "purple")
+``` 
+
+<div align="center">
+<img src="combo_plot.png" height=400>
+</div>
+
+As this graph illustrates, both **winter precipitation** (shown here in blue) and **summer temperatures** (shown here in purple) can vary greatly over the years. However, it appears that drier winters are often associated with hotter summers, creating a double-whammy for sensitive vegetation. Keeping track of these trends can help us to remain aware of when ecosystems are particularly vulnerable due to climatic variations. 
